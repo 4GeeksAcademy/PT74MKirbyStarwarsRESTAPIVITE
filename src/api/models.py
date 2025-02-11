@@ -5,7 +5,7 @@ db = SQLAlchemy()
 class Person(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), nullable=False)
-    home_planet = db.Column(db.Integer, db.ForeignKey('planet.id'))
+    home_planet = db.Column(db.Integer, db.ForeignKey('planet.id'), nullable=True)
     favorite_of = db.relationship('FavoritePeople', backref='person_favorited', lazy='dynamic')
     
 
@@ -37,14 +37,14 @@ class Planet(db.Model):
             "id": self.id,
             "name": self.name,
             "terrain": self.terrain,
-            # do not serialize the password, its a security breach
         }
 
 
 class FavoritePeople(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id_favorites = db.Column(db.Integer, db.ForeignKey('users.id'))
-    favorite_person_id = db.Column(db.Integer, db.ForeignKey('person.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    favorite_person_id = db.Column(db.Integer, db.ForeignKey('person.id'), nullable=False)
+    favorite_person = db.relationship('Person', backref='favorited_by')
 
     def serialize(self):
         return {
@@ -55,8 +55,9 @@ class FavoritePeople(db.Model):
 
 class FavoritePlanets(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id_favorites = db.Column(db.Integer, db.ForeignKey('users.id'))
-    favorite_planet_id = db.Column(db.Integer, db.ForeignKey('planet.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    favorite_planet_id = db.Column(db.Integer, db.ForeignKey('planet.id'), nullable=False)
+    favorite_planet = db.relationship('Planet', backref='favorited_by')
 
     def serialize(self):
         return {
@@ -70,8 +71,8 @@ class Users(db.Model):
     name = db.Column(db.String(250), nullable=False)
     username = db.Column(db.String(250), nullable=False)
     password = db.Column(db.String(250), nullable=False)
-    favorite_people_of = db.relationship('FavoritePeople', backref='user_id', lazy='dynamic')
-    favorite_planets_of = db.relationship('FavoritePlanets', backref='user_id', lazy='dynamic')
+    favorite_people_of = db.relationship('FavoritePeople', backref='user', lazy='dynamic')
+    favorite_planets_of = db.relationship('FavoritePlanets', backref='user', lazy='dynamic')
 
     def __repr__(self):
         return '<User %r>' % self.username
